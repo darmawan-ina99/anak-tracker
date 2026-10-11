@@ -45,6 +45,7 @@
   <div style="font-size:12px;color:#6B7280;margin-bottom:10px">Kode rahasia orang tua (sama dengan yang di HP anak). Disimpan sekali di browser ini.</div>
   <input id="tokenInput" type="text" autocapitalize="none" autocomplete="off" placeholder="Masukkan kode akses Anda"
     style="width:100%;padding:12px;border:1px solid #D1D5DB;border-radius:10px;font-size:15px;margin-bottom:8px">
+  <button class="btn" style="background:#6B7280;margin-bottom:8px" onclick="tempelToken()">📋 Tempel dari clipboard</button>
   <button class="btn" onclick="setToken(document.getElementById('tokenInput').value)">Buka Dashboard</button>
 </div>
 
@@ -86,7 +87,7 @@
 <button class="btn" onclick="muat()">🔄 Perbarui Sekarang</button>
 <div id="status">Memuat data…</div>
 
-<footer>AnakTracker V2.3 — <a href="#" onclick="try{localStorage.removeItem('atk_token')}catch(e){};TOKEN='';document.getElementById('tokenCard').style.display='block';muat()" style="color:#6B7280">ganti kode akses</a></footer>
+<footer><a href="#" id="salinLink" onclick="salinToken();return false" style="color:#1E3A8A;font-weight:700">📋 Salin kode akses</a> &nbsp;|&nbsp; AnakTracker V2.3 — <a href="#" onclick="try{localStorage.removeItem('atk_token')}catch(e){};TOKEN='';document.getElementById('tokenCard').style.display='block';muat()" style="color:#6B7280">ganti kode akses</a></footer>
 
 <script>
 window.onerror = function (msg) {
@@ -97,6 +98,32 @@ window.onerror = function (msg) {
 };
 
 const ENDPOINT = "https://base44.app/api/apps/6aae8b490e3814c5ab5d1b32/functions/anakTrack";
+
+async function salinKeClipboard(teks) {
+  try { await navigator.clipboard.writeText(teks); return true; }
+  catch (e) {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = teks; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      const ok = document.execCommand("copy"); document.body.removeChild(ta); return ok;
+    } catch (e2) { return false; }
+  }
+}
+async function salinToken() {
+  const el = document.getElementById("salinLink");
+  if (!TOKEN) { el.textContent = "Belum ada kode tersimpan"; setTimeout(() => el.textContent = "📋 Salin kode akses", 2000); return; }
+  const ok = await salinKeClipboard(TOKEN);
+  el.textContent = ok ? "✅ Tersalin!" : "Gagal menyalin";
+  setTimeout(() => el.textContent = "📋 Salin kode akses", 2000);
+}
+async function tempelToken() {
+  try {
+    const t = await navigator.clipboard.readText();
+    document.getElementById("tokenInput").value = (t || "").trim();
+  } catch (e) { alert("Izin clipboard ditolak. Tempel manual di kotak."); }
+}
+
 let TOKEN = "";
 try { TOKEN = localStorage.getItem("atk_token") || ""; } catch (e) {}
 
